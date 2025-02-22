@@ -1,6 +1,6 @@
 #include "mem.h"
 #include "types.h"
-#include "allocator.h"
+#include "alloc.h"
 
 /// @brief The start of the heap, filled in by the linker script.
 extern const uint32_t _heap_start;
