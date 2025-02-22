@@ -1,24 +1,20 @@
-#ifndef ALLOCATOR_H
-#define ALLOCATOR_H
+/**
+ * Allocator interface
+ *
+ * This file contains functions for allocating and freeing memory.
+ *
+ * For now the implementation is very simple and allocates memory permanently.
+ * Only when all the allocations are freed, the memory is freed. As long as the
+ * bot periodically frees all the allocated memory, the quantity of allocated
+ * memory remains bounded.
+ */
 
-#include "lib.h"
+#ifndef ALLOC_H
+#define ALLOC_H
 
-extern const uint8_t _heap_start;
-extern const uint8_t _heap_end;
+#include "types.h"
 
-static  void *ptr = (void *) 0;
+void *alloc_malloc(uintptr_t size);
+void alloc_free(void *ptr);
 
-void *malloc(uint32_t size) {
-    if (!ptr) {
-      ptr = (void *)(((uint32_t)&_heap_start / 4) * 4);
-    }
-    void* ret = ptr;
-    ptr += ((size / 4) * 4);
-    return ret;
-}
-
-void free(void *ptr) {
-
-}
-
-#endif // ALLOCATOR_H
+#endif // ALLOC_H

@@ -1,38 +1,34 @@
+/**
+ * Interface for the arm
+ *
+ * This file contains functions for controlling the arm.
+ */
+
 #ifndef ARM_H
 #define ARM_H
 
-#include "lib.h"
+/// @brief Returns whether the arm is ready and `arm_stab()` can be invoked.
+/// @return 1 if the arm is ready, 0 otherwise.
+uint8_t is_arm_ready();
 
-// Function to read the arm status
-int is_arm_ready() {
-    // Reads the first byte from the memory-mapped ARM register (0 offset)
-    return rdi(MEM_ARM, 0) == 1;
-}
-
-// Function to wait for the arm to be ready
-void arm_wait() {
-    // Continuously checks if the arm is ready
-    while (!is_arm_ready()) {
-        // Do nothing, just wait
+/// @brief Waits for the arm to become ready.
+static inline void arm_wait()
+{
+    while (!is_arm_ready())
+    {
+        // Busy-wait loop
     }
 }
 
-// Function to stab the bot (if it's ready)
-void arm_stab() {
-    // Write command to the arm memory address to stab (0x01 is the command for stab)
-    wri(MEM_ARM, 0, cmd(0x01, 0x00, 0x00, 0x00));
-}
+/// @brief Stabs the bot in front of you, killing it.
+void arm_stab();
 
-// Function to pick up an object
-void arm_pick() {
-    // Write command to the arm memory address to pick an object (0x02 is the pick command)
-    wri(MEM_ARM, 0, cmd(0x02, 0x00, 0x00, 0x00));
-}
+/// @brief Picks the object in front of you and puts it into the inventory under the
+/// zeroth index
+void arm_pick();
 
-// Function to drop an object from inventory at given index
-void arm_drop(uint8_t idx) {
-    // Write command to drop the object at the given index (0x03 is the drop command)
-    wri(MEM_ARM, 0, cmd(0x03, idx, 0x00, 0x00));
-}
+/// @brief Takes object from the inventory and drops it in front of you
+/// @param idx Index of the object to drop
+void arm_drop(uint8_t idx);
 
-#endif // ARM_H
+#endif

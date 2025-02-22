@@ -1,46 +1,41 @@
+/**
+ * Serial port interface
+ *
+ * This file contains functions for writing and managing the serial port.
+ */
+
 #ifndef SERIAL_H
 #define SERIAL_H
 
-#include "lib.h"
+#include "types.h"
 
-void serial_write(char ch) {
-    *MEM_SERIAL = (unsigned int)ch;
-}
+/// @brief Writes a single character to the serial port.
+///
+/// @param ch The character to write.
+void serial_write(char ch);
 
-void serial_buffer() {
-    *MEM_SERIAL = 0xFFFFFF00;
-}
+/// @brief Enables buffering.
+void serial_buffer();
 
-void serial_flush() {
-    *MEM_SERIAL = 0xFFFFFF01;
-}
+/// @brief Flushes the buffered characters.
+void serial_flush();
 
-void serial_clear() {
-    *MEM_SERIAL = 0xFFFFFF02;
-}
+/// @brief Clears buffered characters.
+void serial_clear();
 
-void serial_write_str(const char *s) {
-    while (*s) {
-        serial_write(*s++);
-    }
-}
+/// @brief Write a NULL-terminated string to the serial port.
+///
+/// @param s The string to write.
+void serial_write_str(const char *s);
 
-void serial_write_char(char c) {
-    serial_write(c);
-}
+/// @brief Writes the hexadecimal representation of a integer to the serial port.
+///
+/// @param n The integer to write.
+void serial_write_hex(uint32_t n);
 
-
-void serial_write_hex(uint32_t n) {
-    uint32_t m;
-    int i;
-    for (i = 28; i >= 0; i -= 4) {
-        m = (n >> i) & 0xF;
-        if (m < 10) {
-            serial_write_char(m + '0');
-        } else {
-            serial_write_char(m - 10 + 'A');
-        }
-    }
-}
+/// @brief Writes the decimal representation of a integer to the serial port.
+///
+/// @param n The integer to write.
+void serial_write_dec(uint32_t n);
 
 #endif // SERIAL_H

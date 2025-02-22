@@ -1,24 +1,31 @@
+/**
+ * Timer interface
+ *
+ * This file contains functions for reading the timer.
+ */
+
 #ifndef TIMER_H
 #define TIMER_H
 
-#include "lib.h"
+#include "types.h"
 
-// Returns a pseudorandom number (timer seed)
-uint32_t timer_seed() {
-    return rdi(MEM_TIMER, 0);
-}
+/// @brief Returns a pseudorandom number
+/// @return A pseudorandom number
+uint32_t timer_seed();
 
-// Returns the number of ticks that have passed since the bot's been born
-uint32_t timer_ticks() {
-    return rdi(MEM_TIMER, 1);
-}
+/// @brief Returns the number of ticks that have passed since the bot's been born.
+/// @return The number of ticks that have passed since the bot's been born.
+uint32_t timer_ticks();
 
-// Waits until the given number of ticks has passed
-void timer_wait(uint32_t ticks) {
+/// @brief Waits until the given number of ticks has passed
+/// @param ticks Number of ticks to wait for
+static inline void timer_wait(uint32_t ticks)
+{
     uint32_t target_ticks = timer_ticks() + ticks;
 
-    while (timer_ticks() < target_ticks) {
-        // Empty loop waiting for the required ticks to pass
+    while (timer_ticks() < target_ticks)
+    {
+        // Busy-wait loop
     }
 }
 

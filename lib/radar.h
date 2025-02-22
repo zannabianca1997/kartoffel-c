@@ -1,76 +1,142 @@
+/**
+ * Radar interface
+ *
+ * This file contains functions for reading the radar.
+ *
+ * One can use the `radar_scan_*()` functions to launch a scan, and then use
+ * `radar_scan_*_at()` functions to read the tile data. Moreover, one can use
+ * `radar_scan_*_bot_at()` functions to read the id of eventual bots.
+ *
+ * Note that for performance reasons, those functions doesn't copy the scanned
+ * area into your bot's RAM - rather, the data is kept inside the radar's
+ * memory and transparently accessed each time you call `radar_scan_*_at()`
+ * etc.
+ *
+ * In practice, this means that consecutive scans "overwrite" previous scans'
+ * results, and only one of the `RadarScan*` structs must be kept in memory at
+ * any given time.
+ *
+ * If you want full control over the scans, you can use the `radar_scan()` and
+ * `radar_read()` functions directly by defining the `RADAR_H_LOW_LEVEL` macro
+ * before including this file.
+ */
+
 #ifndef RADAR_H
 #define RADAR_H
 
-#include "lib.h"
+#include "types.h"
 
-// Check if the radar is ready
-static inline int is_radar_ready() {
-    return rdi(MEM_RADAR, 0) == 1;
-}
+/// @brief Returns whether the radar is ready and `radar_scan()` can be invoked.
+/// @return 1 if the radar is ready, 0 otherwise.
+uint8_t is_radar_ready();
 
-// Wait for the radar to become ready
-static inline void radar_wait() {
-    while (!is_radar_ready()) {
+/// @brief Waits for the radar to become ready.
+static inline void radar_wait()
+{
+    while (!is_radar_ready())
+    {
         // Empty loop
     }
 }
 
-// Low-level radar scan function
-static inline void radar_scan(uint8_t r) {
-    wri(MEM_RADAR, 0, cmd(0x01, r, 0x00, 0x00));
-}
+#ifdef RADAR_H_LOW_LEVEL
 
-// Radar data reading function (equivalent to radar_read in Rust)
-static inline uint32_t radar_read(uint8_t r, int8_t dx, int8_t dy, uint8_t z) {
-    uint32_t x = (dx + (r / 2)) & 0xFF;
-    uint32_t y = (dy + (r / 2)) & 0xFF;
-    uint32_t z_offset = z * r * r + y * r + x;
-    return rdi(MEM_RADAR, 1 + z_offset);
-}
+/// @brief Scans a square around the bot (Low-level function).
+/// @param radius The radius of the scan.
+void radar_scan(uint8_t radius);
 
-// Radar scan struct
-typedef struct {
-    // No direct data storage; will access memory directly when needed
-} RadarScan;
+/// @brief Reads data from the radar scan (Low-level function).
+/// @param radius The radius of the scan.
+/// @param dx The offset in the bot's direction.
+/// @param dy The offset perpendicular to the bot's direction.
+/// @param z What part of the data to read.
+/// @return The scanned data.
+uint32_t radar_read(uint8_t radius, int8_t dx, int8_t dy, uint8_t z);
 
-// Access a scanned tile (equivalent to RadarScan::at in Rust)
-static inline char radar_scan_at(const RadarScan *scan, uint8_t r, int8_t dx, int8_t dy) {
-    return (char)(radar_read(r, dx, dy, 0) & 0xFF);
-}
+#endif // RADAR_H_LOW_LEVEL
 
-// Access the bot ID at the given coordinates (equivalent to RadarScan::bot_at in Rust)
-static inline uint64_t radar_scan_bot_at(const RadarScan *scan, uint8_t r, int8_t dx, int8_t dy) {
-    uint64_t d1 = (uint64_t)radar_read(r, dx, dy, 1);
-    uint64_t d2 = (uint64_t)radar_read(r, dx, dy, 2);
-    return (d1 << 32) | d2;
-}
+/// @brief Represents a 3x3 radar scan.
+typedef struct RadarScan3x3 RadarScan3x3;
 
-// Radar scan 3x3 (equivalent to radar_scan_3x3 in Rust)
-static inline RadarScan radar_scan_3x3() {
-    radar_scan(3);
-    RadarScan scan;
-    return scan;
-}
+/// @brief Scans a 3x3 square around the bot.
+/// @return The radar scan struct.
+RadarScan3x3 *radar_scan_3x3();
 
-// Radar scan 5x5 (equivalent to radar_scan_5x5 in Rust)
-static inline RadarScan radar_scan_5x5() {
-    radar_scan(5);
-    RadarScan scan;
-    return scan;
-}
+/// @brief Returns the tile at given coordinates.
+/// @param scan The radar scan struct.
+/// @param dx Offset in the bot's direction.
+/// @param dy Offset perpendicular to the bot's direction.
+/// @return The tile at given coordinates.
+uint8_t radar_scan_3x3_at(const RadarScan3x3 *scan, int8_t dx, int8_t dy);
 
-// Radar scan 7x7 (equivalent to radar_scan_7x7 in Rust)
-static inline RadarScan radar_scan_7x7() {
-    radar_scan(7);
-    RadarScan scan;
-    return scan;
-}
+/// @brief Returns the bot id at given coordinates.
+/// @param scan The radar scan struct.
+/// @param dx Offset in the bot's direction.
+/// @param dy Offset perpendicular to the bot's direction.
+/// @return The bot id at given coordinates, or 0 if there's no bot there.
+uint64_t radar_scan_3x3_bot_at(const RadarScan3x3 *scan, int8_t dx, int8_t dy);
 
-// Radar scan 9x9 (equivalent to radar_scan_9x9 in Rust)
-static inline RadarScan radar_scan_9x9() {
-    radar_scan(9);
-    RadarScan scan;
-    return scan;
-}
+/// @brief Represents a 5x5 radar scan.
+typedef struct RadarScan5x5 RadarScan5x5;
+
+/// @brief Scans a 5x5 square around the bot.
+/// @return The radar scan struct.
+RadarScan5x5 *radar_scan_5x5();
+
+/// @brief Returns the tile at given coordinates.
+/// @param scan The radar scan struct.
+/// @param dx Offset in the bot's direction.
+/// @param dy Offset perpendicular to the bot's direction.
+/// @return The tile at given coordinates.
+uint8_t radar_scan_5x5_at(const RadarScan5x5 *scan, int8_t dx, int8_t dy);
+
+/// @brief Returns the bot id at given coordinates.
+/// @param scan The radar scan struct.
+/// @param dx Offset in the bot's direction.
+/// @param dy Offset perpendicular to the bot's direction.
+/// @return The bot id at given coordinates, or 0 if there's no bot there.
+uint64_t radar_scan_5x5_bot_at(const RadarScan5x5 *scan, int8_t dx, int8_t dy);
+
+/// @brief Represents a 7x7 radar scan.
+typedef struct RadarScan7x7 RadarScan7x7;
+
+/// @brief Scans a 7x7 square around the bot.
+/// @return The radar scan struct.
+RadarScan7x7 *radar_scan_7x7();
+
+/// @brief Returns the tile at given coordinates.
+/// @param scan The radar scan struct.
+/// @param dx Offset in the bot's direction.
+/// @param dy Offset perpendicular to the bot's direction.
+/// @return The tile at given coordinates.
+uint8_t radar_scan_7x7_at(const RadarScan7x7 *scan, int8_t dx, int8_t dy);
+
+/// @brief Returns the bot id at given coordinates.
+/// @param scan The radar scan struct.
+/// @param dx Offset in the bot's direction.
+/// @param dy Offset perpendicular to the bot's direction.
+/// @return The bot id at given coordinates, or 0 if there's no bot there.
+uint64_t radar_scan_7x7_bot_at(const RadarScan7x7 *scan, int8_t dx, int8_t dy);
+
+/// @brief Represents a 9x9 radar scan.
+typedef struct RadarScan9x9 RadarScan9x9;
+
+/// @brief Scans a 9x9 square around the bot.
+/// @return The radar scan struct.
+RadarScan9x9 *radar_scan_9x9();
+
+/// @brief Returns the tile at given coordinates.
+/// @param scan The radar scan struct.
+/// @param dx Offset in the bot's direction.
+/// @param dy Offset perpendicular to the bot's direction.
+/// @return The tile at given coordinates.
+uint8_t radar_scan_9x9_at(const RadarScan9x9 *scan, int8_t dx, int8_t dy);
+
+/// @brief Returns the bot id at given coordinates.
+/// @param scan The radar scan struct.
+/// @param dx Offset in the bot's direction.
+/// @param dy Offset perpendicular to the bot's direction.
+/// @return The bot id at given coordinates, or 0 if there's no bot there.
+uint64_t radar_scan_9x9_bot_at(const RadarScan9x9 *scan, int8_t dx, int8_t dy);
 
 #endif // RADAR_H
