@@ -51,8 +51,6 @@ OBJS=$(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/src/%.o,$(SRCS))
 .PHONY: build clean lib firmware
 .SUFFIXES:
 
-all: build
-
 build: firmware
 
 lib: $(LIB)
